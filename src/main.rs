@@ -19,7 +19,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         queries: vec![WildcardElem {
                             wildcard: Wildcard {
                                 package_attr_name: PackageAttrName {
-                                    value: "*code*".to_owned(),
+                                    value: "*sond*".to_owned(),
                                     case_insensitive: true,
                                 },
                             },
@@ -44,7 +44,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?
         .text()
         .await?;
-
-    println!("{:#?}", &serde_json::from_str::<Response>(&response)?);
+    println!("{}", &serde_json::from_str::<Response>(&response)?.hits);
     Ok(())
 }
