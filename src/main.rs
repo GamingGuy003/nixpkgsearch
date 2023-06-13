@@ -1,4 +1,5 @@
 use json::request::{Bool, DisMax, PackageAttrName, Query, Wildcard};
+use log::trace;
 use reqwest::header::AUTHORIZATION;
 
 use crate::json::{
@@ -11,6 +12,10 @@ mod json;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     pretty_env_logger::init();
+    let args = std::env::args();
+    let args_string = args.into_iter().collect::<Vec<String>>();
+    let pkgname = args_string.get(1).cloned().unwrap_or_default();
+    trace!("Looking for {}", pkgname);
     let query = Request {
         query: Query {
             bool: Bool {
@@ -19,7 +24,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         queries: vec![WildcardElem {
                             wildcard: Wildcard {
                                 package_attr_name: PackageAttrName {
-                                    value: "*sond*".to_owned(),
+                                    value: format!("*{}*", pkgname.clone()),
                                     case_insensitive: true,
                                 },
                             },
@@ -44,6 +49,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?
         .text()
         .await?;
-    println!("{}", &serde_json::from_str::<Response>(&response)?.hits);
+    trace!("Response: {}", response);
+    let hits = &serde_json::from_str::<Response>(&response)?.hits;
+    if !hits.hits.is_empty() {
+        println!("Matches for {}:\n{}", pkgname, hits);
+    } else {
+        println!("No packages found for {}", pkgname);
+    }
     Ok(())
 }

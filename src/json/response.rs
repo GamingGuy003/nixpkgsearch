@@ -13,7 +13,7 @@ pub struct Response {
 #[derive(Deserialize, Debug)]
 pub struct Hits {
     pub total: Total,
-    pub max_score: f32,
+    pub max_score: Option<f32>,
     pub hits: Vec<Package>,
 }
 
@@ -146,12 +146,25 @@ impl Display for Source {
                 .unwrap_or(&"/")
         );
 
+        let provides = (!self.package_programs.is_empty()).then(|| {
+            format!(
+                "Provides: [\n{}\n]\n",
+                self.package_programs
+                    .clone()
+                    .iter()
+                    .map(|program| format!("\t\t{program}"))
+                    .collect::<Vec<String>>()
+                    .join("\n"),
+            )
+        });
+
         write!(
             f,
-            "{}{}{}{}{}{}{}{}{}{}\n\n",
+            "{}{}{}{}{}{}{}{}{}{}{}\n\n",
             info,
             description.unwrap_or_default(),
             description_long.unwrap_or_default(),
+            provides.unwrap_or_default(),
             platforms,
             licenseset.unwrap_or_default(),
             licenses.unwrap_or_default(),
